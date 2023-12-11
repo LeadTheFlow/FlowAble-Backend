@@ -6,14 +6,16 @@ from flask import Flask, jsonify, request
 
 app = Flask(__name__)
 
-@app.route("/api/detectTrash", methods=['GET'])
+@app.route("/api/detectTrash", methods=['POST'])
 def detectTrash():
     
-    image_path = request.args.get('path')
+    image_path = request.files['image']
     
-    if not image_path or not os.path.exists(image_path):
+    if image_file:
+        image_data = image_file.read()
+    else:
         return jsonify({"error": "File not exists or path not provided"})
-    
+        
     # Prediction URL 및 헤더 설정
     url = "https://objectdetect-prediction.cognitiveservices.azure.com/customvision/v3.0/Prediction/0ca5b4ed-0702-4eee-ad9b-1d06af73ef97/detect/iterations/Iteration3/image"
     headers = {
@@ -21,8 +23,8 @@ def detectTrash():
         'Content-Type': 'application/octet-stream'
     }
     # 이미지 파일을 읽음
-    with open(image_path, 'rb') as image_file:
-        image_data = image_file.read()
+    # with open(image_path, 'rb') as image_file:
+    #     image_data = image_file.read()
     
     # POST 요청을 보내고 결과를 받음
     response = requests.post(url, headers=headers, data=image_data)
