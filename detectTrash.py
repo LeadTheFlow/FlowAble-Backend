@@ -2,6 +2,7 @@ import os
 import requests
 import cv2
 import json
+import numpy as np
 from flask import Flask, jsonify, request
 
 app = Flask(__name__)
@@ -9,7 +10,7 @@ app = Flask(__name__)
 @app.route("/api/detectTrash", methods=['POST'])
 def detectTrash():
     
-    image_path = request.files['image']
+    image_file = request.files.get('image')
     
     if image_file:
         image_data = image_file.read()
@@ -30,7 +31,13 @@ def detectTrash():
     response = requests.post(url, headers=headers, data=image_data)
     result = response.json()
     
-    image = cv2.imread(image_path)
+    nparr = np.frombuffer(image_data, np.uint8)
+    image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+    
+    if image is None:
+        return jsonify({"error": "Invalid image data"})
+    
+    # image = cv2.imread(image_data)
     h, w = image.shape[:2]
 
     # 이미지 가로, 세로 3등분하기
