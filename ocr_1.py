@@ -91,7 +91,7 @@ def OCR_result():
 
     result = {"brand": brand, "size": size}
     print(result)
-    return jsonify(result)
+    return jsonify(result), 200, {'Content-Type': 'application/json; charset=utf-8'}
 
 if __name__ == "__main__":
     if not os.path.exists(UPLOAD_FOLDER):
