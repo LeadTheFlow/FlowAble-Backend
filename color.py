@@ -2,9 +2,10 @@ from flask import Flask, request, jsonify
 from PIL import Image
 import numpy as np
 from sklearn.cluster import KMeans
+from flask_cors import CORS
 
 app = Flask(__name__)
-
+CORS(app, resources={r"/api/*":{"origins":"*"}})
 def detect_menstrual_blood(image, k=3, red_threshold=100):
     # 이미지를 NumPy 배열로 변환합니다.
     image = np.array(image)
@@ -35,7 +36,7 @@ def detect_menstrual_blood(image, k=3, red_threshold=100):
 
 @app.route("/api/color", methods=["GET", "POST"])
 def index():
-    result = None
+    data = None
 
     if request.method == "POST":
         # POST 요청에서 이미지 파일 받기
@@ -47,11 +48,11 @@ def index():
             is_menstrual = detect_menstrual_blood(image)
 
             # 결과에 따라 메시지 설정
-            result = {
+            data = {
                 "message": "월경혈 감지. 월경이 시작한 것 같습니다. 달력에 기록할까요?" if is_menstrual else "월경혈이 감지되지 않습니다. 월경중이 아닌 것 같습니다."
             }
 
-    return jsonify(result)
+    return jsonify(data)
 
 if __name__ == "__main__":
     app.run(debug=True, port=5001)
