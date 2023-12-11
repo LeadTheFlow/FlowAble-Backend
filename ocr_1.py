@@ -1,33 +1,28 @@
 from flask import Flask, jsonify, request
+import requests
 import os
 import json
 import base64
 import string
-from werkzeug.utils import secure_filename
 from flask_cors import CORS
 
 app = Flask(__name__)
 
-UPLOAD_FOLDER = 'uploads'  # 업로드된 파일을 저장할 폴더
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}  # 허용되는 파일 확장자 집합
+UPLOAD_FOLDER = 'uploads'
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
 
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-CORS(app, resources={r"/api/*":{"origins":"*"}})
-CORS(app, expose_headers='Authorization')
+CORS(app, supports_credentials=True, resources={r"/api/OCR": {"origins": "http://localhost:3000"}})
 @app.route("/api/OCR", methods=['POST'])
 def OCR_result():
-    # 요청에서 이미지 파일 가져오기
-    uploaded_file = request.files.get('file')
-
-    if not uploaded_file or not allowed_file(uploaded_file.filename):
+    if 'file' not in request.files:
         return jsonify({"error": "Invalid file or file type not allowed"})
 
+    # 요청에서 이미지 파일 가져오기
+    uploaded_file = request.files['file']
+
     # 업로드된 파일을 안전한 이름으로 저장
-    filename = secure_filename(uploaded_file.filename)
-    file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    file_path = os.path.join(UPLOAD_FOLDER, uploaded_file.filename)
     uploaded_file.save(file_path)
 
     # OCR을 위한 코드 (이 부분은 OCR API에 따라 수정 필요)
@@ -55,7 +50,7 @@ def OCR_result():
         ]
     }
 
-    response = request.post(URL, data=json.dumps(payload), headers=headers)
+    response = requests.post(URL, data=json.dumps(payload), headers=headers)
     res = json.loads(response.text)
 
     texts = []
@@ -95,8 +90,8 @@ def OCR_result():
                         break
 
     result = {"brand": brand, "size": size}
-
-    return jsonify(result), 200, {'Content-Type': 'application/json; charset=utf-8'}
+    print(result)
+    return jsonify(result)
 
 if __name__ == "__main__":
     if not os.path.exists(UPLOAD_FOLDER):

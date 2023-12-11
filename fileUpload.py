@@ -9,7 +9,6 @@ if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
 CORS(app, supports_credentials=True, resources={r"/upload": {"origins": "http://localhost:3000"}})
-
 @app.route('/upload', methods=['POST'])
 def upload_image():
     if 'file' not in request.files:
