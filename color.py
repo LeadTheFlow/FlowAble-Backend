@@ -11,7 +11,7 @@ def detect_menstrual_blood(image, k=3, red_threshold=100):
 
     # 이미지를 1차원 배열로 변환합니다.
     pixels = image.reshape((-1, 3))
-
+    
     # K-means 클러스터링을 사용하여 색상을 그룹화합니다.
     kmeans = KMeans(n_clusters=k)
     kmeans.fit(pixels)
