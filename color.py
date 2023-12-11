@@ -2,9 +2,10 @@ from flask import Flask, request, jsonify
 from PIL import Image
 import numpy as np
 from sklearn.cluster import KMeans
+from flask_cors import CORS
 
 app = Flask(__name__)
-
+CORS(app, resources={r"/api/*":{"origins":"*"}})
 def detect_menstrual_blood(image, k=3, red_threshold=100):
     # 이미지를 NumPy 배열로 변환합니다.
     image = np.array(image)

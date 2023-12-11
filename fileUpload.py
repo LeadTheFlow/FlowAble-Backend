@@ -1,37 +1,27 @@
+from flask import Flask, request, jsonify
+from flask_cors import CORS
 import os
-from flask import Flask, flash, request, redirect, url_for, session
-from werkzeug.utils import secure_filename
-from flask_cors import CORS, cross_origin
-import logging
-
-logging.basicConfig(level=logging.INFO)
-
-logger = logging.getLogger('HELLO WORLD')
-
-
-
-UPLOAD_FOLDER = 'uploads'
-ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
 
 app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-CORS(app, resources={r"/api/*":{"origins":"*"}})
-CORS(app, expose_headers='Authorization')
+
+UPLOAD_FOLDER = 'uploads'
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+
+CORS(app, supports_credentials=True, resources={r"/upload": {"origins": "http://localhost:3000"}})
+
 @app.route('/upload', methods=['POST'])
-def fileUpload():
-    target=os.path.join(UPLOAD_FOLDER,'test_docs')
-    if not os.path.isdir(target):
-        os.mkdir(target)
-    logger.info("welcome to upload`")
-    file = request.files['file'] 
-    filename = secure_filename(file.filename)
-    destination="/".join([target, filename])
-    file.save(destination)
-    session['uploadFilePath']=destination
-    response="Whatever you wish too return"
-    return response
+def upload_image():
+    if 'file' not in request.files:
+        return 'No file part'
 
-if __name__ == "__main__":
-    app.secret_key = os.urandom(24)
-    app.run(debug=True,host="0.0.0.0",use_reloader=False, port=5003)
+    file = request.files['file']
 
+    # 파일 저장 경로 설정
+    file_path = os.path.join(UPLOAD_FOLDER, file.filename)
+    file.save(file_path)
+
+    return 'Image uploaded successfully'
+
+if __name__ == '__main__':
+    app.run(debug=True, port=5003)

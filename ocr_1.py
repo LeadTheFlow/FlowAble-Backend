@@ -7,7 +7,6 @@ from werkzeug.utils import secure_filename
 from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app, resources={r"/api/*":{"origins":"*"}})
 
 UPLOAD_FOLDER = 'uploads'  # 업로드된 파일을 저장할 폴더
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}  # 허용되는 파일 확장자 집합
@@ -16,8 +15,9 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-@app.route("/api/product/OCR", methods=['POST'])
+CORS(app, resources={r"/api/*":{"origins":"*"}})
+CORS(app, expose_headers='Authorization')
+@app.route("/api/OCR", methods=['POST'])
 def OCR_result():
     # 요청에서 이미지 파일 가져오기
     uploaded_file = request.files.get('file')
