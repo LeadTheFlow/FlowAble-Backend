@@ -9,6 +9,7 @@ from kneed import KneeLocator
 app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 
+#testcommit
 
 def detect_menstrual_blood(image, red_threshold=100):
     # 이미지를 NumPy 배열로 변환
