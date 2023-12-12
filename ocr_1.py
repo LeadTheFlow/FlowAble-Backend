@@ -90,7 +90,6 @@ def OCR_result():
                         break
 
     data = {"brand": brand, "size": size}
-    print(data)
     return jsonify(data), 200, {'Content-Type': 'application/json; charset=utf-8'}
 
 if __name__ == "__main__":
