@@ -49,7 +49,8 @@ def index():
 
             # 결과에 따라 메시지 설정
             data = {
-                "message": "월경혈 감지. 월경이 시작한 것 같습니다. 달력에 기록할까요?" if is_menstrual else "월경혈이 감지되지 않습니다. 월경중이 아닌 것 같습니다."
+                "message": "월경혈 감지. 월경이 시작한 것 같습니다. 달력에 기록할까요?" if is_menstrual else "월경혈이 감지되지 않습니다. 월경중이 아닌 것 같습니다.",
+                "isColor" : "true" if is_menstrual else "false"
             }
 
     return jsonify(data)
