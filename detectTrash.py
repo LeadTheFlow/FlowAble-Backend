@@ -1,45 +1,44 @@
-import os
-import requests
-import cv2
-import json
-import numpy as np
 from flask import Flask, jsonify, request
+from flask_cors import CORS
+import requests
+from PIL import Image
+import io
+import numpy as np
+import cv2
 
 app = Flask(__name__)
 
+CORS(app, supports_credentials=True, resources={r"/api/detectTrash": {"origins": "http://localhost:3000"}})
+
 @app.route("/api/detectTrash", methods=['POST'])
 def detectTrash():
-    
-    image_file = request.files.get('image')
-    
-    if image_file:
-        image_data = image_file.read()
-    else:
-        return jsonify({"error": "File not exists or path not provided"})
-        
-    # Prediction URL 및 헤더 설정
+    image_file = request.files.get('file')
+    if not image_file:
+        return jsonify({"error": "File not provided"})
+
+    # 이미지를 PIL Image 객체로 변환 후 바이트 스트림으로 저장
+    image = Image.open(image_file)
+    img_byte_arr = io.BytesIO()
+    image.save(img_byte_arr, format='JPEG')
+    img_byte_arr = img_byte_arr.getvalue()
+
+    # Object Detection API 요청
     url = "https://objectdetect-prediction.cognitiveservices.azure.com/customvision/v3.0/Prediction/0ca5b4ed-0702-4eee-ad9b-1d06af73ef97/detect/iterations/Iteration3/image"
     headers = {
         'Prediction-Key': 'b9090cf45c45448fa6fc2620c91bafe0',
         'Content-Type': 'application/octet-stream'
     }
-    # 이미지 파일을 읽음
-    # with open(image_path, 'rb') as image_file:
-    #     image_data = image_file.read()
-    
-    # POST 요청을 보내고 결과를 받음
-    response = requests.post(url, headers=headers, data=image_data)
+    response = requests.post(url, headers=headers, data=img_byte_arr)
     result = response.json()
-    
-    nparr = np.frombuffer(image_data, np.uint8)
+
+    # OpenCV를 사용하여 이미지 처리
+    nparr = np.frombuffer(img_byte_arr, np.uint8)
     image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
     
     if image is None:
         return jsonify({"error": "Invalid image data"})
     
-    # image = cv2.imread(image_data)
     h, w = image.shape[:2]
-
     # 이미지 가로, 세로 3등분하기
     # 가로 2개, 세로 2개 선을 기준으로 나눈다.
     # one_w : 가로 첫번째 선, two_w : 가로 두번째 선
@@ -54,8 +53,7 @@ def detectTrash():
     if not detected_objects:
         return jsonify({"message": "물체 없음"})
     
-    for pred in result['predictions']:
-        # 확률이 0.9이상인 예측만 처리하기
+    for pred in result.get('predictions', []):
         if pred['probability'] >= 0.9:
             box = pred['boundingBox']
             left = int(box['left'] * w)
@@ -89,20 +87,10 @@ def detectTrash():
             else:
                 position = "위치 알 수 없음"
             
-            start_point = (left, top)
-            end_point = (left+width, top+height)
+            data = {"position":position}
+
+    return jsonify(data)
+
+if __name__ == "__main__":
+    app.run(debug=True, port=5004)
             
-            color = (255,0,0)
-            thickness = 2
-            
-            # image = cv2.rectangle(image, start_point, end_point, color, thickness)
-            # cv2.putText(image, f"{pred['tagName']} ({position})", (left, top - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
-            
-            # print(f"{pred['tagName']} ({position})")
-            
-            result = {"position":position}
-            
-            return jsonify(result)
-            
-if __name__=="__main__":
-    app.run(debug=True)            

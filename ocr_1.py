@@ -5,12 +5,11 @@ import json
 import base64
 import string
 from flask_cors import CORS
+import io
+from PIL import Image
 
 app = Flask(__name__)
 
-UPLOAD_FOLDER = 'uploads'
-if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
 
 CORS(app, supports_credentials=True, resources={r"/api/OCR": {"origins": "http://localhost:3000"}})
 @app.route("/api/OCR", methods=['POST'])
@@ -19,11 +18,13 @@ def OCR_result():
         return jsonify({"error": "Invalid file or file type not allowed"})
 
     # 요청에서 이미지 파일 가져오기
-    uploaded_file = request.files['file']
-
-    # 업로드된 파일을 안전한 이름으로 저장
-    file_path = os.path.join(UPLOAD_FOLDER, uploaded_file.filename)
-    uploaded_file.save(file_path)
+    image_file = request.files.get('file')
+    
+    # 이미지 PIL 객체로 변환 후 바이트 스트림으로 저장하기
+    image = Image.open(image_file)
+    img_byte_arr = io.BytesIO()
+    image.save(img_byte_arr, format='JPEG')
+    img_byte_arr = img_byte_arr.getvalue()
 
     # OCR을 위한 코드 (이 부분은 OCR API에 따라 수정 필요)
     URL = "https://289x53pm3g.apigw.ntruss.com/custom/v1/26842/c927448b0a02c01ba659d0339776a7971c45256d5406bf1a8ec2aaee0ba591fd/general"
@@ -33,9 +34,8 @@ def OCR_result():
         "Content-Type": "application/json",
         "X-OCR-SECRET": KEY
     }
-
-    with open(file_path, "rb") as f:
-        img = base64.b64encode(f.read()).decode('utf-8')
+    
+    img = base64.b64encode(img_byte_arr).decode('utf-8')
 
     payload = {
         "version": "V1",
