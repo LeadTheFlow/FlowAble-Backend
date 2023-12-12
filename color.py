@@ -6,7 +6,6 @@ from sklearn import metrics
 import matplotlib.pyplot as plt
 from flask_cors import CORS
 from kneed import KneeLocator  
-
 app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 
@@ -18,7 +17,7 @@ def detect_menstrual_blood(image, red_threshold=100):
     # 이미지를 1차원 배열로 변환
     pixels = image.reshape((-1, 3))
 
-    # Elbow method를 사용하여 적절한 클러스터 수(k)를 찾기
+    # Elbow method
     distortions = []
     max_k = 10  # 최대 클러스터 수
     for k in range(1, max_k + 1):
@@ -26,20 +25,20 @@ def detect_menstrual_blood(image, red_threshold=100):
         kmeans.fit(pixels)
         distortions.append(kmeans.inertia_)
 
-    # Elbow method 그래프 그리기
+    # Elbow method 그래프
     plt.plot(range(1, max_k + 1), distortions, marker='o')
     plt.xlabel('Number of clusters')
     plt.ylabel('Distortion')
     plt.title('Elbow Method for Optimal k')
 
-    # kneed 라이브러리로 엘보우 포인트를 자동으로 찾습니다.
+    # kneed 라이브러리를 사용하여 엘보우 포인트 찾기
     kn = KneeLocator(range(1, max_k + 1), distortions, curve='convex', direction='decreasing')
     optimal_k = kn.knee
 
-    # 최적 k값 출력
-    print(f"Automatic optimal number of clusters (k): {optimal_k}")
+    # 최적 k값을 출력
+    print(f"자동 생성 k값 (k): {optimal_k}")
 
-    # K-means 로 색상을 그룹화
+    # K-means 클러스터링을 사용하여 색상을 그룹화
     kmeans = KMeans(n_clusters=optimal_k)
     kmeans.fit(pixels)
 
