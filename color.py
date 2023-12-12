@@ -33,7 +33,7 @@ def detect_menstrual_blood(image, red_threshold=100):
     plt.show()
 
     # Elbow point에서의 클러스터 수를 선택
-    optimal_k = int(input("Enter the optimal number of clusters (k): "))
+    optimal_k = int(input("최적의 클러스트값 넣기 (k): "))
 
     # 색상그룹화
     kmeans = KMeans(n_clusters=optimal_k)
